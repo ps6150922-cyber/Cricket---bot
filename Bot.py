@@ -4,81 +4,47 @@ import requests
 import feedparser
 import random
 
-# GitHub Secrets se keys fetch karna
+# Keys fetch karna
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 API_KEY = os.getenv("CRICKET_API_KEY")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-def get_live_score():
-    """CricketData API se live match ka score lana"""
+def post_updates():
+    print("News dhund raha hoon...")
     try:
-        url = f"https://api.cricketdata.org/v1/currentMatches?apikey={API_KEY}"
-        response = requests.get(url).json()
-        matches = response.get('data', [])
-        
-        if matches:
-            # Pehla active match uthana
-            match = matches[0]
-            score_msg = (
-                f"🏏 *LIVE MATCH UPDATE*\n\n"
-                f"🏆 *{match['name']}*\n"
-                f"📊 *Status:* {match['status']}\n\n"
-                f"🔥 Kya lagta hai kaun baazi marega? niche comment mein batao! 👇"
-            )
-            return score_msg
-        return None
-    except Exception as e:
-        print(f"Score Error: {e}")
-        return None
+        # 1. LIVE SCORE (Agar API key khatam ho gayi hai toh ye skip ho jayega)
+        try:
+            score_url = f"https://api.cricketdata.org/v1/currentMatches?apikey={API_KEY}"
+            score_data = requests.get(score_url).json()
+            matches = score_data.get('data', [])
+            
+            if matches:
+                match = matches[0]
+                score_text = f"🏏 *LIVE SCORE:* {match['name']}\n\n📊 Status: {match['status']}"
+                bot.send_message(CHAT_ID, score_text, parse_mode="Markdown")
+        except Exception as e:
+            print(f"Score Fetch Failed (Quota Issue): {e}")
 
-def get_latest_news():
-    """Cricbuzz RSS se latest news uthana"""
-    try:
+        # 2. LATEST NEWS (Ye hamesha free rahega)
         feed = feedparser.parse("https://www.cricbuzz.com/rss-feeds/cricket-news")
         if feed.entries:
             news = feed.entries[0]
-            news_msg = (
-                f"🚀 *BREAKING NEWS*\n\n"
-                f"🔥 {news.title}\n\n"
-                f"🔗 [Poori Khabar Padhein]({news.link})"
-            )
-            return news_msg
-        return None
-    except Exception as e:
-        print(f"News Error: {e}")
-        return None
+            news_text = f"🚀 *BREAKING:* {news.title}\n\n🔗 [Poori Khabar]({news.link})\n\n🔥 Comment mein batao kaisa laga!"
+            bot.send_message(CHAT_ID, news_text, parse_mode="Markdown")
 
-def post_to_telegram():
-    # 1. Live Score Bhejna
-    score = get_live_score()
-    if score:
-        bot.send_message(CHAT_ID, score, parse_mode="Markdown")
-    
-    # 2. Latest News Bhejna
-    news = get_latest_news()
-    if news:
-        bot.send_message(CHAT_ID, news, parse_mode="Markdown")
-    
-    # 3. Engagement Poll (Har baar naya sawal)
-    poll_questions = [
-        "Aaj match ka 'Hero' kaun hoga? ⭐",
-        "Kya aaj koi 100 banayega? 🏏",
-        "Aapki favorite team kaunsi hai? 😍",
-        "Pitch kaisa khel rahi hai? 🏟️"
-    ]
-    bot.send_poll(
-        CHAT_ID,
-        question=random.choice(poll_questions),
-        options=["Batsmen", "Bowlers", "All-rounders", "Toss decides"],
-        is_anonymous=False
-    )
+        # 3. ENGAGEMENT POLL
+        bot.send_poll(
+            CHAT_ID,
+            question="Aaj ka match kaun paltega? 🔥",
+            options=["Batsmen", "Bowlers", "Luck/Toss", "Fielding"],
+            is_anonymous=False
+        )
+        print("✅ Telegram par updates bhej di gayi hain!")
+
+    except Exception as e:
+        print(f"❌ Final Error: {e}")
 
 if __name__ == "__main__":
-    if BOT_TOKEN and CHAT_ID:
-        post_to_telegram()
-        print("✅ Telegram par updates bhej di gayi hain!")
-    else:
-        print("❌ Error: Secrets check karein (Token ya Chat ID missing hai)")
-
+    post_updates()
