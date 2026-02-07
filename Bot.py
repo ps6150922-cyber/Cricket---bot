@@ -2,47 +2,48 @@ import os
 import tweepy
 import feedparser
 
-# GitHub Secrets se keys automatically fetch hongi
+# GitHub Secrets se keys fetch karna
 API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
-BEARER_TOKEN = os.getenv("BEARER_TOKEN") # News fetch karne ke liye zaroori nahi, par safe rakhna achha hai
 
-# X (Twitter) Client Setup
+# X Client Setup
 client = tweepy.Client(
-    bearer_token=BEARER_TOKEN,
-    consumer_key=API_KEY,
-    consumer_secret=API_SECRET,
-    access_token=ACCESS_TOKEN,
-    access_token_secret=ACCESS_TOKEN_SECRET
+    consumer_key=API_KEY, consumer_secret=API_SECRET,
+    access_token=ACCESS_TOKEN, access_token_secret=ACCESS_TOKEN_SECRET
 )
 
-# Cricket News RSS Feed (Aap koi bhi cricket RSS use kar sakte hain)
-RSS_URL = "https://feeds.feedburner.com/ndtvsports-cricket"
+# Active Cricket News Source
+RSS_URL = "https://www.cricbuzz.com/rss-feeds/cricket-news"
 
 def post_cricket_news():
     try:
-        # News fetch karna
         feed = feedparser.parse(RSS_URL)
-        if not feed.entries:
-            print("Nayi news nahi mili.")
-            return
+        if len(feed.entries) > 0:
+            title = feed.entries[0].title
+            link = feed.entries[0].link
+            
+            # Catchy Tweet Format (Engagement ke liye)
+            # Hum news ko short rakhenge aur ek sawal puchenge
+            tweet_text = (
+                f"🏏 BIG UPDATE: {title}\n\n"
+                f"Aapko kya lagta hai is baare mein? 🤔\n\n"
+                f"Poori khabar padhein 👇\n{link}\n\n"
+                f"#Cricket #TeamIndia #CricketNews"
+            )
+            
+            # Character check (X limit 280-300)
+            if len(tweet_text) > 280:
+                tweet_text = tweet_text[:270] + "..." + f"\n\n{link}"
 
-        # Sabse latest news uthana
-        latest_news = feed.entries[0]
-        title = latest_news.title
-        link = latest_news.link
-
-        # Tweet format karna
-        tweet_text = f"🏏 Latest Cricket Update:\n\n{title}\n\nRead more: {link}\n\n#Cricket #CricketNews #Updates"
-
-        # Tweet post karna
-        response = client.create_tweet(text=tweet_text)
-        print(f"Post successful! Tweet ID: {response.data['id']}")
+            client.create_tweet(text=tweet_text)
+            print(f"Post Success: {title}")
+        else:
+            print("News nahi mili!")
 
     except Exception as e:
-        print(f"Error aagaya: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     post_cricket_news()
