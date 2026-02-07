@@ -2,7 +2,7 @@ import os
 import tweepy
 import feedparser
 
-# GitHub Secrets se keys fetch karna
+# Keys fetch karna
 API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
@@ -14,36 +14,40 @@ client = tweepy.Client(
     access_token=ACCESS_TOKEN, access_token_secret=ACCESS_TOKEN_SECRET
 )
 
-# Active Cricket News Source
-RSS_URL = "https://www.cricbuzz.com/rss-feeds/cricket-news"
+# Naya 100% Working News Source (Google News Cricket)
+RSS_URL = "https://news.google.com/rss/search?q=cricket+india&hl=en-IN&gl=IN&ceid=IN:en"
 
 def post_cricket_news():
     try:
         feed = feedparser.parse(RSS_URL)
+        
         if len(feed.entries) > 0:
-            title = feed.entries[0].title
-            link = feed.entries[0].link
+            # Sabse taaza khabar uthana
+            news = feed.entries[0]
+            title = news.title
+            link = news.link
             
-            # Catchy Tweet Format (Engagement ke liye)
-            # Hum news ko short rakhenge aur ek sawal puchenge
+            # Catchy Viral Format (Short & Engaging)
             tweet_text = (
-                f"🏏 BIG UPDATE: {title}\n\n"
-                f"Aapko kya lagta hai is baare mein? 🤔\n\n"
-                f"Poori khabar padhein 👇\n{link}\n\n"
-                f"#Cricket #TeamIndia #CricketNews"
+                f"🏏 CRICKET FLASH: {title}\n\n"
+                f"Is par aapka kya reaction hai? 👇\n\n"
+                f"Read more: {link}\n\n"
+                f"#Cricket #TeamIndia #CricketUpdates"
             )
             
-            # Character check (X limit 280-300)
+            # Agar tweet 280 se bada hai to link ke liye jagah banana
             if len(tweet_text) > 280:
-                tweet_text = tweet_text[:270] + "..." + f"\n\n{link}"
+                tweet_text = title[:150] + "...\n\nRead more: " + link
 
+            # Final Post
             client.create_tweet(text=tweet_text)
-            print(f"Post Success: {title}")
+            print(f"Bhai, post ho gayi: {title}")
         else:
-            print("News nahi mili!")
+            print("Abhi bhi news nahi mili, link badalna hoga.")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error aagaya: {e}")
 
 if __name__ == "__main__":
     post_cricket_news()
+
