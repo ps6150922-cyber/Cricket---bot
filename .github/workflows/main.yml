@@ -1,12 +1,12 @@
-name: Cricket Bot Automation
+name: Telegram Cricket Bot
 
 on:
   schedule:
-    - cron: '0 */5 * * *'
-  workflow_dispatch:
+    - cron: '*/2 * * * *' # Har 2 minute mein updates check karega
+  workflow_dispatch: # Manual button ke liye
 
 jobs:
-  tweet_job:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -17,15 +17,13 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install Libraries
-        run: pip install -r requirements.txt
+      - name: Install Dependencies
+        run: |
+          pip install pyTelegramBotAPI requests feedparser
 
-      - name: Run Python Bot
+      - name: Run Bot
         env:
-          API_KEY: ${{ secrets.API_KEY }}
-          API_SECRET: ${{ secrets.API_SECRET }}
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
-          BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CRICKET_API_KEY: ${{ secrets.CRICKET_API_KEY }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python Bot.py
-
